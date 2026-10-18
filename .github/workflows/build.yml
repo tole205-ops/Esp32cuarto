@@ -12,14 +12,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build ESPHome binary
-        uses: esphome/build-action@v6.0.0
-        id: esphome-build
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          yaml-file: cuarto.yaml
+          python-version: '3.11'
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      - name: Compile ESPHome firmware
+        run: esphome compile cuarto.yaml
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: cuarto-firmware
-          path: ${{ steps.esphome-build.outputs.name }}
+          path: .pio/build/cuarto/firmware.bin
