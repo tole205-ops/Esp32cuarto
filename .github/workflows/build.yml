@@ -27,4 +27,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cuarto-firmware
-          path: .pio/build/cuarto/firmware.bin
+          path: .esphome/build/cuarto/firmware.bin
