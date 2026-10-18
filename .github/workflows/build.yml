@@ -16,7 +16,7 @@ jobs:
         uses: esphome/build-action@v6.0.0
         id: esphome-build
         with:
-          yaml_file: cuarto.yaml
+          yaml-file: cuarto.yaml
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
