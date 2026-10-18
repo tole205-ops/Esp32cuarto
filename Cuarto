@@ -1,0 +1,112 @@
+esphome:
+  name: cuarto
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: "ndbcYdKuo+Xn4V8Nbh6yKnx+QhnNwejXu1fqozXkdt0="
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: "Livebox6s-6595"
+  password: "jTPXWquC656G"
+
+  ap:
+    ssid: "Cuarto Fallback Hotspot"
+    password: "j0FfugCgMdcB"
+
+captive_portal:
+
+# 👇 ACTIVA LA UI BONITA
+web_server:
+  port: 80
+  version: 2
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+  frequency: 10000
+
+# ================= SENSORES REALES =================
+sensor:
+  - platform: aht10
+    variant: aht20
+    address: 0x38
+    temperature:
+      name: "🌡️ Temp Interior"
+      id: temp_int
+    humidity:
+      name: "💧 Humedad Interior"
+      id: hum_int
+    update_interval: 5s
+
+  - platform: bme280_i2c
+    address: 0x76
+    temperature:
+      name: "🌡️ Temp Exterior"
+      id: temp_ext
+    humidity:
+      name: "💧 Humedad Exterior"
+      id: hum_ext
+    pressure:
+      name: "🧭 Presión Exterior"
+      id: pres_ext
+    update_interval: 10s
+
+  - platform: template
+    name: "💦 Punto de Rocío Interior"
+    lambda: |-
+      float t = id(temp_int).state;
+      float h = id(hum_int).state;
+      float a = 17.27;
+      float b = 237.7;
+      float alpha = ((a * t) / (b + t)) + log(h/100.0);
+      return (b * alpha) / (a - alpha);
+    unit_of_measurement: "°C"
+    update_interval: 10s
+
+text_sensor:
+  - platform: template
+    name: "🏠 Estado del Cuarto"
+    lambda: |-
+      float t = id(temp_int).state;
+      float h = id(hum_int).state;
+
+      if (t >= 18 && t <= 24 && h >= 40 && h <= 60) {
+        return {"🟢 Óptimo"};
+      }
+      else if (t >= 16 && t <= 27 && h >= 35 && h <= 70) {
+        return {"🟡 Regular"};
+      }
+      else {
+        return {"🔴 No Óptimo"};
+      }
+    update_interval: 10s
+
+  - platform: template
+    name: "🌦️ Clima Estimado"
+    lambda: |-
+      static float last = 0;
+      float p = id(pres_ext).state;
+      float diff = p - last;
+      last = p;
+
+      if (p < 1005 && diff < -0.3) {
+        return {"🌧️ Lluvia"};
+      }
+      else if (p >= 1005 && p <= 1015) {
+        return {"⛅ Inestable"};
+      }
+      else {
+        return {"☀️ Despejado"};
+      }
+    update_interval: 60s
